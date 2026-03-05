@@ -19,7 +19,24 @@ function isAnalyticsPath(path: string) {
   return pattern.test(path);
 }
 
+/** Host that serves the full app (login, dashboard), e.g. docs.sankthelena.de when set in NEXT_PUBLIC_APP_BASE_HOST or NEXTAUTH_URL. */
+function isAppHost(host: string): boolean {
+  const appHost = process.env.NEXT_PUBLIC_APP_BASE_HOST;
+  if (appHost && host?.toLowerCase() === appHost.toLowerCase()) return true;
+  try {
+    const authUrl = process.env.NEXTAUTH_URL;
+    if (authUrl && host) {
+      const authHost = new URL(authUrl).hostname.toLowerCase();
+      if (host.toLowerCase() === authHost) return true;
+    }
+  } catch {
+    // ignore
+  }
+  return false;
+}
+
 function isCustomDomain(host: string) {
+  if (isAppHost(host)) return false;
   return (
     (process.env.NODE_ENV === "development" &&
       (host?.includes(".local") || host?.includes("papermark.dev"))) ||

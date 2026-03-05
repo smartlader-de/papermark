@@ -24,6 +24,21 @@ import { getIpAddress } from "@/lib/utils/ip";
 
 const VERCEL_DEPLOYMENT = !!process.env.VERCEL_URL;
 
+/** Session cookie domain: .papermark.com for Papermark app, undefined for custom domains (e.g. docs.sankthelena.de). */
+function getSessionCookieDomain(): string | undefined {
+  if (!VERCEL_DEPLOYMENT) return undefined;
+  const url = process.env.NEXTAUTH_URL;
+  if (!url) return undefined;
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    if (hostname === "papermark.com" || hostname.endsWith(".papermark.com"))
+      return ".papermark.com";
+  } catch {
+    // ignore
+  }
+  return undefined;
+}
+
 function getMainDomainUrl(): string {
   if (process.env.NODE_ENV === "development") {
     return process.env.NEXTAUTH_URL || "http://localhost:3000";
@@ -214,7 +229,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        domain: VERCEL_DEPLOYMENT ? ".papermark.com" : undefined,
+        domain: getSessionCookieDomain(),
         secure: VERCEL_DEPLOYMENT,
       },
     },
