@@ -1,10 +1,30 @@
 import { tenant } from "@teamhanko/passkeys-next-auth-provider";
 
+const HANKO_ERROR =
+  "Please set HANKO_API_KEY and NEXT_PUBLIC_HANKO_TENANT_ID in your .env.local file.";
+
+/** No-op tenant used when Hanko env vars are missing (e.g. at build time). Throws only when methods are invoked. */
+function createNoOpTenant(): ReturnType<typeof tenant> {
+  const throwErr = () => {
+    throw new Error(HANKO_ERROR);
+  };
+  return new Proxy({} as ReturnType<typeof tenant>, {
+    get(_, prop) {
+      if (prop === "user" || prop === "registration" || prop === "credential") {
+        return new Proxy(throwErr, {
+          get() {
+            return throwErr;
+          },
+        });
+      }
+      return throwErr;
+    },
+  });
+}
+
 function getHanko() {
   if (!process.env.HANKO_API_KEY || !process.env.NEXT_PUBLIC_HANKO_TENANT_ID) {
-    throw new Error(
-      "Please set HANKO_API_KEY and NEXT_PUBLIC_HANKO_TENANT_ID in your .env.local file.",
-    );
+    return createNoOpTenant();
   }
   return tenant({
     apiKey: process.env.HANKO_API_KEY,
