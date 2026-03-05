@@ -13,9 +13,11 @@ export class SlackClient {
   // private oauthUrl = "https://slack.com/oauth/v2/authorize";
 
   constructor() {
-    this.clientId = process.env.SLACK_CLIENT_ID as string;
-    this.clientSecret = process.env.SLACK_CLIENT_SECRET as string;
+    this.clientId = process.env.SLACK_CLIENT_ID ?? "";
+    this.clientSecret = process.env.SLACK_CLIENT_SECRET ?? "";
+  }
 
+  private assertConfigured(): void {
     if (!this.clientId || !this.clientSecret) {
       throw new Error("SLACK_CLIENT_ID and SLACK_CLIENT_SECRET must be set");
     }
@@ -142,6 +144,7 @@ export class SlackClient {
   // }
 
   async getChannels(accessToken: string): Promise<SlackChannel[]> {
+    this.assertConfigured();
     const decryptedToken = decryptSlackToken(accessToken);
     if (!decryptedToken) {
       throw new Error("Missing Slack access token");
@@ -200,6 +203,7 @@ export class SlackClient {
     accessToken: string,
     message: SlackMessage,
   ): Promise<{ ok: boolean; ts?: string; error?: string }> {
+    this.assertConfigured();
     const decryptedToken = decryptSlackToken(accessToken);
     if (!decryptedToken) {
       throw new Error("Missing Slack access token");
