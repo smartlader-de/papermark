@@ -63,3 +63,6 @@ lib/emails/marketing
 # changelog and docs
 changelog
 .docs
+
+# clavix
+.clavix
